@@ -12,6 +12,9 @@ def get_db():
     finally:
         db.close()    
 
+# Create all database tables if they don't already exist
+models.Base.metadata.create_all(bind=engine)         
+
 @app.post("/blog", status_code=201)
 def create(request: schemas.Blog,db:Session = Depends(get_db)):
     new_blog = models.Blog(title=request.title, body=request.body)
@@ -50,3 +53,12 @@ def show(id: int ,db:Session = Depends(get_db)):
     if not blog:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = f"Blog with id {id} is not available")
     return blog
+
+
+@app.post('/user', status_code=status.HTTP_201_CREATED)
+def create_user(request: schemas.User , db: Session = Depends(get_db)):
+    new_user = models.User(name=request.name, email=request.email, password=request.password)
+    db.add(new_user)  
+    db.commit()
+    db.refresh(new_user)          
+    return new_user
