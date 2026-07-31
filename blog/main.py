@@ -1,8 +1,9 @@
 from fastapi import FastAPI,Depends,Response,status ,HTTPException
-from . import schemas
-from . import models
+from . import schemas, models
 from .database import SessionLocal, engine
 from sqlalchemy.orm import Session
+from .hashing import Hash
+
 app = FastAPI()
 
 def get_db():
@@ -57,7 +58,7 @@ def show(id: int ,db:Session = Depends(get_db)):
 
 @app.post('/user', status_code=status.HTTP_201_CREATED)
 def create_user(request: schemas.User , db: Session = Depends(get_db)):
-    new_user = models.User(name=request.name, email=request.email, password=request.password)
+    new_user = models.User(name=request.name, email=request.email, password=Hash.bcrypt(request.password))
     db.add(new_user)  
     db.commit()
     db.refresh(new_user)          
